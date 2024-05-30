@@ -73,7 +73,7 @@ class ModifyPdf(MainWindow):
     def select_destination(self):
         new_file, _ = QtWidgets.QFileDialog.getSaveFileName(
             parent=self,
-            caption="Sauvegarder le fichier PDF",
+            caption="Enregistrer le fichier PDF",
             directory=f"{str(Path.home())}/Nouveau_fichier.pdf",
         )
         return new_file
