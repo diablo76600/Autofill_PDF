@@ -3,9 +3,7 @@
 
 import sys
 from pathlib import Path
-from PyQt6 import QtCore, QtGui, QtWidgets, QtPdf
-from PyQt6.QtPdf import QPdfDocument
-from PyQt6.QtPdfWidgets import QPdfView
+from PyQt6 import QtCore, QtWidgets
 from PyQt6.QtGui import QIntValidator
 from PyQt6.QtCore import Qt
 from fillpdf import fillpdfs
@@ -49,7 +47,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pushButton_save = QtWidgets.QPushButton(self.gridLayoutWidget)
         self.pushButton_save.setMaximumSize(QtCore.QSize(120, 24))
         self.pushButton_save.clicked.connect(self.save_pdf)
-        self.gridLayout.addWidget(self.pushButton_save, 3, 1, 1, 1, alignment=Qt.AlignmentFlag.AlignHCenter)
+        self.gridLayout.addWidget(
+            self.pushButton_save, 3, 1, 1, 1, alignment=Qt.AlignmentFlag.AlignHCenter
+        )
         self.setCentralWidget(self.gridLayoutWidget)
         self.retranslateUi()
 
@@ -61,13 +61,18 @@ class MainWindow(QtWidgets.QMainWindow):
         self.label_number.setText("Numéro :")
         self.pushButton_save.setText("Enregistrer PDF")
 
+
 class ModifyPdf(MainWindow):
     def __init__(self):
         super().__init__()
 
     def select_pdf(self):
         current_file, _ = QtWidgets.QFileDialog.getOpenFileName(
-            parent=self, caption="Selectionnez le fichier PDF", directory=str(Path.home()), filter="*.pdf")
+            parent=self,
+            caption="Selectionnez le fichier PDF",
+            directory=str(Path.home()),
+            filter="*.pdf",
+        )
         self.lineEdit_pdf.setText(current_file)
 
     def select_destination(self):
@@ -77,7 +82,7 @@ class ModifyPdf(MainWindow):
             directory=f"{str(Path.home())}/Nouveau_fichier.pdf",
         )
         return new_file
-    
+
     def control_fields(self):
         return bool(self.lineEdit_pdf.text() and self.lineEdit_number.text())
 
@@ -87,13 +92,21 @@ class ModifyPdf(MainWindow):
             sending_date = self.dateEdit.text()
             pdf_file = self.lineEdit_pdf.text()
             number = self.lineEdit_number.text()
-            data_dict = {"dactuelle": formatted_date, "ddepot": sending_date, "num": number}
+            data_dict = {
+                "dactuelle": formatted_date,
+                "ddepot": sending_date,
+                "num": number,
+            }
         else:
-            QtWidgets.QMessageBox.warning(self, "Problème !!", "Veuillez remplir tous les champs !!")
+            QtWidgets.QMessageBox.warning(
+                self, "Problème !!", "Veuillez remplir tous les champs !!"
+            )
             return
         if new_file := self.select_destination():
             fillpdfs.write_fillable_pdf(pdf_file, new_file, data_dict, flatten=False)
-            QtWidgets.QMessageBox.information(self, "Sauvegarde", f"Fichier {new_file} enregistré.")
+            QtWidgets.QMessageBox.information(
+                self, "Sauvegarde", f"Fichier {new_file} enregistré."
+            )
 
 
 if __name__ == "__main__":
