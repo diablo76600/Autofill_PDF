@@ -3,10 +3,10 @@
 
 import sys
 from pathlib import Path
-from PyQt6 import QtCore, QtWidgets
-from PyQt6.QtGui import QIntValidator
-from PyQt6.QtCore import Qt
-from fillpdf import fillpdfs
+from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtGui import QIntValidator
+from PyQt5.QtCore import Qt
+from PyPDF2 import PdfWriter, PdfReader
 import locale
 
 # Définir la localisation en français
@@ -54,7 +54,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.retranslateUi()
 
     def retranslateUi(self):
-        self.setWindowTitle("Remplissage Automatique de fichiers PDF")
+        self.setWindowTitle("Suivi de colis")
         self.label_date.setText("Date d'envoi :")
         self.pushButton_choice.setText("Choisir PDF")
         self.label_pdf_file.setText("Fichier PDF :")
@@ -103,10 +103,21 @@ class ModifyPdf(MainWindow):
             )
             return
         if new_file := self.select_destination():
-            fillpdfs.write_fillable_pdf(pdf_file, new_file, data_dict, flatten=False)
+            self.save_modified_pdf(pdf_file, new_file, data_dict)
             QtWidgets.QMessageBox.information(
                 self, "Sauvegarde", f"Fichier {new_file} enregistré."
             )
+
+    def save_modified_pdf(self, pdf_file, new_file, data_dict):
+        reader = PdfReader(pdf_file)
+        writer = PdfWriter()
+        page = reader.pages[0]
+        writer.add_page(page)
+        writer.update_page_form_field_values(
+            writer.pages[0], data_dict
+        )
+        with open(new_file, "wb") as output_stream:
+            writer.write(output_stream)
 
 
 if __name__ == "__main__":
