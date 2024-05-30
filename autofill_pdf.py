@@ -86,24 +86,26 @@ class ModifyPdf(MainWindow):
     def control_fields(self):
         return bool(self.lineEdit_pdf.text() and self.lineEdit_number.text())
 
+    def create_data_dict(self):
+        formatted_date = self.today.toPyDate().strftime("%b %Y")
+        sending_date = self.dateEdit.text()
+        number = self.lineEdit_number.text()
+        return {
+            "dactuelle": formatted_date,
+            "ddepot": sending_date,
+            "num": number,
+        }
+
     def save_pdf(self):
-        if self.control_fields():
-            formatted_date = self.today.toPyDate().strftime("%b %Y")
-            sending_date = self.dateEdit.text()
-            pdf_file = self.lineEdit_pdf.text()
-            number = self.lineEdit_number.text()
-            data_dict = {
-                "dactuelle": formatted_date,
-                "ddepot": sending_date,
-                "num": number,
-            }
-        else:
+        if not self.control_fields():
             QtWidgets.QMessageBox.warning(
                 self, "Problème !!", "Veuillez remplir tous les champs !!"
             )
             return
-        if new_file := self.select_destination():
-            self.save_modified_pdf(pdf_file, new_file, data_dict)
+        data_dict = self.create_data_dict()
+        new_file = self.select_destination()
+        if new_file:
+            self.save_modified_pdf(self.lineEdit_pdf.text(), new_file, data_dict)
             QtWidgets.QMessageBox.information(
                 self, "Sauvegarde", f"Fichier {new_file} enregistré."
             )
