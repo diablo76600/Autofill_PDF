@@ -3,11 +3,10 @@
 
 import sys
 from pathlib import Path
-from PyQt6 import QtCore, QtWidgets
-from PyQt6.QtGui import QIntValidator
-from PyQt6.QtCore import Qt
+from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtGui import QIntValidator
+from PyQt5.QtCore import Qt
 from PyPDF2 import PdfReader, PdfWriter
-import pypdftk
 import locale
 
 # Définir la localisation en français
@@ -108,16 +107,16 @@ class ModifyPdf(MainWindow):
             )
 
     def save_modified_pdf_file(self, pdf_file, new_file, data_dict):
+        ReadOnly = False
         reader = PdfReader(pdf_file)
         writer = PdfWriter()
         page = reader.pages[0]
         writer.add_page(page)
         writer.update_page_form_field_values(
-            writer.pages[0], data_dict
+            writer.pages[0], data_dict, flags=ReadOnly # type: ignore
         )
         with open(new_file, "wb") as output_stream:
             writer.write(output_stream)
-        pypdftk.fill_form(new_file, out_file=new_file, flatten=True)
 
 
 if __name__ == "__main__":
