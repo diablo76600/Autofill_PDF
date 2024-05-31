@@ -3,10 +3,11 @@
 
 import sys
 from pathlib import Path
-from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtGui import QIntValidator
-from PyQt5.QtCore import Qt
-from PyPDF2 import PdfWriter, PdfReader
+from PyQt6 import QtCore, QtWidgets
+from PyQt6.QtGui import QIntValidator
+from PyQt6.QtCore import Qt
+from PyPDF2 import PdfReader, PdfWriter
+import pypdftk
 import locale
 
 # Définir la localisation en français
@@ -38,7 +39,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.lineEdit_number.setClearButtonEnabled(True)
         self.gridLayout.addWidget(self.lineEdit_number, 2, 1, 1, 1)
         self.pushButton_choice = QtWidgets.QPushButton(self.gridLayoutWidget)
-        self.pushButton_choice.clicked.connect(self.select_pdf)
+        self.pushButton_choice.clicked.connect(self.select_pdf_file)
         self.gridLayout.addWidget(self.pushButton_choice, 1, 2, 1, 1)
         self.label_pdf_file = QtWidgets.QLabel(self.gridLayoutWidget)
         self.gridLayout.addWidget(self.label_pdf_file, 1, 0, 1, 1)
@@ -46,7 +47,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.gridLayout.addWidget(self.label_number, 2, 0, 1, 1)
         self.pushButton_save = QtWidgets.QPushButton(self.gridLayoutWidget)
         self.pushButton_save.setMaximumSize(QtCore.QSize(120, 24))
-        self.pushButton_save.clicked.connect(self.save_pdf)
+        self.pushButton_save.clicked.connect(self.save_pdf_file)
         self.gridLayout.addWidget(
             self.pushButton_save, 3, 1, 1, 1, alignment=Qt.AlignmentFlag.AlignHCenter
         )
@@ -66,16 +67,16 @@ class ModifyPdf(MainWindow):
     def __init__(self):
         super().__init__()
 
-    def select_pdf(self):
+    def select_pdf_file(self):
         current_file, _ = QtWidgets.QFileDialog.getOpenFileName(
             parent=self,
             caption="Selectionnez le fichier PDF",
             directory=str(Path.home()),
-            filter="*.pdf",
+            filter="Pdf (*.pdf *.PDF);;All files (*.*)"
         )
         self.lineEdit_pdf.setText(current_file)
 
-    def select_destination(self):
+    def select_destination_file(self):
         new_file, _ = QtWidgets.QFileDialog.getSaveFileName(
             parent=self,
             caption="Enregistrer le fichier PDF",
@@ -83,34 +84,30 @@ class ModifyPdf(MainWindow):
         )
         return new_file
 
-    def control_fields(self):
+    def validate_fields(self):
         return bool(self.lineEdit_pdf.text() and self.lineEdit_number.text())
 
-    def create_data_dict(self):
-        formatted_date = self.today.toPyDate().strftime("%b %Y")
-        sending_date = self.dateEdit.text()
-        number = self.lineEdit_number.text()
+    def generate_data_dict(self):
         return {
-            "dactuelle": formatted_date,
-            "ddepot": sending_date,
-            "num": number,
+            "dactuelle": self.today.toPyDate().strftime("%b %Y"),
+            "ddepot": self.dateEdit.text(),
+            "num": self.lineEdit_number.text(),
         }
 
-    def save_pdf(self):
-        if not self.control_fields():
+    def save_pdf_file(self):
+        if not self.validate_fields():
             QtWidgets.QMessageBox.warning(
                 self, "Problème !!", "Veuillez remplir tous les champs !!"
             )
             return
-        data_dict = self.create_data_dict()
-        new_file = self.select_destination()
-        if new_file:
-            self.save_modified_pdf(self.lineEdit_pdf.text(), new_file, data_dict)
+        data_dict = self.generate_data_dict()
+        if new_file := self.select_destination_file():
+            self.save_modified_pdf_file(self.lineEdit_pdf.text(), new_file, data_dict)
             QtWidgets.QMessageBox.information(
                 self, "Sauvegarde", f"Fichier {new_file} enregistré."
             )
 
-    def save_modified_pdf(self, pdf_file, new_file, data_dict):
+    def save_modified_pdf_file(self, pdf_file, new_file, data_dict):
         reader = PdfReader(pdf_file)
         writer = PdfWriter()
         page = reader.pages[0]
@@ -120,6 +117,7 @@ class ModifyPdf(MainWindow):
         )
         with open(new_file, "wb") as output_stream:
             writer.write(output_stream)
+        pypdftk.fill_form(new_file, out_file=new_file, flatten=True)
 
 
 if __name__ == "__main__":
