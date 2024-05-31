@@ -9,12 +9,13 @@ from PyQt5.QtCore import Qt
 from PyPDF2 import PdfReader, PdfWriter
 import locale
 
-# Définir la localisation en français
+# Set localization in French
 locale.setlocale(locale.LC_TIME, "fr_FR.UTF-8")
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize the main application window with various UI elements and settings."""
         super().__init__()
         self.today = QtCore.QDate.currentDate()
         onlyInt = QIntValidator()
@@ -53,7 +54,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setCentralWidget(self.gridLayoutWidget)
         self.retranslateUi()
 
-    def retranslateUi(self):
+    def retranslateUi(self) -> None:
+        """Set the text for various UI elements in the application."""
         self.setWindowTitle("Suivi de colis")
         self.label_date.setText("Date d'envoi :")
         self.pushButton_choice.setText("Choisir PDF")
@@ -63,10 +65,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
 
 class ModifyPdf(MainWindow):
-    def __init__(self):
+    def __init__(self) -> None:
+        """Initialize the object."""
         super().__init__()
 
-    def select_pdf_file(self):
+    def select_pdf_file(self) -> None:
+        """Open a file dialog to select a PDF file and set the selected file path in the QLineEdit."""
         current_file, _ = QtWidgets.QFileDialog.getOpenFileName(
             parent=self,
             caption="Selectionnez le fichier PDF",
@@ -75,7 +79,8 @@ class ModifyPdf(MainWindow):
         )
         self.lineEdit_pdf.setText(current_file)
 
-    def select_destination_file(self):
+    def select_destination_file(self) -> str:
+        """Open a file dialog to select a destination path for saving a PDF file."""
         new_file, _ = QtWidgets.QFileDialog.getSaveFileName(
             parent=self,
             caption="Enregistrer le fichier PDF",
@@ -83,17 +88,20 @@ class ModifyPdf(MainWindow):
         )
         return new_file
 
-    def validate_fields(self):
-        return bool(self.lineEdit_pdf.text() and self.lineEdit_number.text())
+    def validate_fields(self) -> bool:
+            """Check if the PDF file path and number fields are not empty. """
+            return bool(self.lineEdit_pdf.text() and self.lineEdit_number.text())
 
-    def generate_data_dict(self):
+    def generate_data_dict(self) -> dict[str, str]:
+        """Generate a dictionary containing data from the UI elements."""
         return {
             "dactuelle": self.today.toPyDate().strftime("%b %Y"),
             "ddepot": self.dateEdit.text(),
             "num": self.lineEdit_number.text(),
         }
 
-    def save_pdf_file(self):
+    def save_pdf_file(self) -> None:
+        """Save a modified PDF file with user-provided data if fields are valid, show warnings otherwise."""
         if not self.validate_fields():
             QtWidgets.QMessageBox.warning(
                 self, "Problème !!", "Veuillez remplir tous les champs !!"
@@ -106,7 +114,8 @@ class ModifyPdf(MainWindow):
                 self, "Sauvegarde", f"Fichier {new_file} enregistré."
             )
 
-    def save_modified_pdf_file(self, pdf_file, new_file, data_dict):
+    def save_modified_pdf_file(self, pdf_file, new_file, data_dict) -> None:
+        """Save a modified PDF file with updated form field values."""
         ReadOnly = False
         reader = PdfReader(pdf_file)
         writer = PdfWriter()
