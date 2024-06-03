@@ -6,17 +6,19 @@ from pathlib import Path
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtGui import QIntValidator
 from PyQt5.QtCore import Qt
-from PyPDF2 import PdfReader, PdfWriter
-import locale
+from pypdf import PdfReader, PdfWriter
 
 # Set localization in French
-locale.setlocale(locale.LC_TIME, "fr_FR.UTF-8")
+locale = QtCore.QLocale(QtCore.QLocale.Language.French, QtCore.QLocale.Country.France)
+
+
 
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self) -> None:
         """Initialize the main application window with various UI elements and settings."""
         super().__init__()
+        self.setLocale(locale)
         self.today = QtCore.QDate.currentDate() # Get the current date
         onlyInt = QIntValidator() # Create a validator for integers
         onlyInt.setRange(0, 9999999) # Set the range for the integer validator
@@ -83,7 +85,8 @@ class ModifyPdf(MainWindow):
             parent=self,
             caption="Selectionnez le fichier PDF",
             directory=str(Path.home()),
-            filter="Pdf (*.pdf *.PDF);;All files (*.*)"
+            filter="Pdf (*.pdf *.PDF);;All files (*.*)",
+            options=QtWidgets.QFileDialog.DontUseNativeDialog
         )
         self.lineEdit_pdf_file.setText(current_file)
 
@@ -126,17 +129,20 @@ class ModifyPdf(MainWindow):
         """Save a modified PDF file with updated form field values."""
         reader = PdfReader(pdf_file)
         writer = PdfWriter()
-        page = reader.pages[0]
-        writer.add_page(page)
+        writer.append(reader)
         writer.update_page_form_field_values(
-            writer.pages[0], data_dict, flags=b"00000001"
+            writer.pages[0], data_dict, flags=1
         )
-        with open(new_file, "wb") as output_stream:
-            writer.write(output_stream)
+        writer.write(new_file)
 
 
 if __name__ == "__main__":
-    myApp = QtWidgets.QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
+    # Translate
+    translator = QtCore.QTranslator()
+    traduction = QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.TranslationsPath)
+    translator.load("qtbase_fr.qm", traduction)
+    app.installTranslator(translator)
     modify_pdf = ModifyPdf()
     modify_pdf.show()
-    sys.exit(myApp.exec())
+    sys.exit(app.exec())
