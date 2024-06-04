@@ -6,14 +6,13 @@ from pathlib import Path
 from typing import Dict, Optional
 from PyQt5 import QtCore, QtWidgets, QtGui
 from pypdf import PdfReader, PdfWriter
-
+import locale
 # Set localization in French
-locale = QtCore.QLocale(QtCore.QLocale.Language.French, QtCore.QLocale.Country.France)
+locale.setlocale(locale.LC_TIME, "fr_FR.UTF-8")
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self) -> None:
         super().__init__()
-        self.setLocale(locale)
         self.today = QtCore.QDate.currentDate()
         self.init_ui()
         self.retranslate_ui()
