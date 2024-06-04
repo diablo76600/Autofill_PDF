@@ -76,7 +76,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def select_pdf_file(self) -> None:
         """Open a file dialog to select a PDF file."""
         pdf_file, _ = QtWidgets.QFileDialog.getOpenFileName(
-            self, "Sélectionnez le fichier PDF", str(Path.home()), "Pdf (*.pdf *.PDF);;All files (*.*)"
+            self, "Sélectionnez le fichier PDF", str(Path.home()), "Pdf (*.pdf *.PDF);;Tous (*.*)"
         )
         if pdf_file:
             self.pdf_file_line_edit.setText(pdf_file)
