@@ -3,146 +3,135 @@
 
 import sys
 from pathlib import Path
-from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtGui import QIntValidator
-from PyQt5.QtCore import Qt
+from typing import Dict, Optional
+from PyQt5 import QtCore, QtWidgets, QtGui
 from pypdf import PdfReader, PdfWriter
 
 # Set localization in French
 locale = QtCore.QLocale(QtCore.QLocale.Language.French, QtCore.QLocale.Country.France)
 
-
-
-
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self) -> None:
-        """Initialize the main application window with various UI elements and settings."""
         super().__init__()
         self.setLocale(locale)
-        self.today = QtCore.QDate.currentDate() # Get the current date
-        onlyInt = QIntValidator() # Create a validator for integers
-        onlyInt.setRange(0, 9999999) # Set the range for the integer validator
-        self.resize(600, 250) # Resize the main window
-        self.gridLayoutWidget = QtWidgets.QWidget(self) # Create a widget for the grid layout
-        self.gridLayoutWidget.setGeometry(QtCore.QRect(30, 20, 580, 230)) # Set the geometry of the widget
-        self.gridLayout = QtWidgets.QGridLayout(self.gridLayoutWidget) # Create a grid layout within the widget
+        self.today = QtCore.QDate.currentDate()
+        self.init_ui()
+        self.retranslate_ui()
+
+    def init_ui(self) -> None:
+        """Initialize the UI elements."""
+        self.resize(600, 250)
+        central_widget = QtWidgets.QWidget(self)
+        layout = QtWidgets.QGridLayout(central_widget)
+
         # Widgets Date
-        self.label_date = QtWidgets.QLabel(self.gridLayoutWidget)
-        self.gridLayout.addWidget(self.label_date, 0, 0, 1, 1)
-        self.dateEdit = QtWidgets.QDateEdit(self.gridLayoutWidget)
-        self.dateEdit.setDisplayFormat("dddd dd MMMM yyyy") 
-        self.dateEdit.setFixedWidth(200)
-        self.dateEdit.setCalendarPopup(True)
-        self.dateEdit.setDate(self.today)
-        self.gridLayout.addWidget(self.dateEdit, 0, 1, 1, 1)
-        # Widgets Pdf file
-        self.label_pdf_file = QtWidgets.QLabel(self.gridLayoutWidget)
-        self.gridLayout.addWidget(self.label_pdf_file, 1, 0, 1, 1)
-        self.lineEdit_pdf_file = QtWidgets.QLineEdit(self.gridLayoutWidget)
-        self.lineEdit_pdf_file.setClearButtonEnabled(True)
-        self.gridLayout.addWidget(self.lineEdit_pdf_file, 1, 1, 1, 1)
+        self.date_label = QtWidgets.QLabel()
+        layout.addWidget(self.date_label, 0, 0, 1, 1)
+        self.date_edit = QtWidgets.QDateEdit(calendarPopup=True)
+        self.date_edit.setDisplayFormat("dddd dd MMMM yyyy")
+        self.date_edit.setFixedWidth(200)
+        self.date_edit.setDate(self.today)
+        layout.addWidget(self.date_edit, 0, 1, 1, 1)
+
+        # Widgets PDF file
+        self.pdf_file_label = QtWidgets.QLabel()
+        layout.addWidget(self.pdf_file_label, 1, 0, 1, 1)
+        self.pdf_file_line_edit = QtWidgets.QLineEdit()
+        self.pdf_file_line_edit.setClearButtonEnabled(True)
+        layout.addWidget(self.pdf_file_line_edit, 1, 1, 1, 1)
+
         # Widgets Number
-        self.label_number = QtWidgets.QLabel(self.gridLayoutWidget)
-        self.gridLayout.addWidget(self.label_number, 2, 0, 1, 1)
-        self.lineEdit_number = QtWidgets.QLineEdit(self.gridLayoutWidget)
-        self.lineEdit_number.setFixedWidth(100)
-        self.lineEdit_number.setValidator(onlyInt)
-        self.lineEdit_number.setClearButtonEnabled(True)
-        self.gridLayout.addWidget(self.lineEdit_number, 2, 1, 1, 1)
-        # Widget Button save pdf
-        self.pushButton_select_pdf = QtWidgets.QPushButton(self.gridLayoutWidget)
-        self.pushButton_select_pdf.clicked.connect(self.select_pdf_file)
-        self.pushButton_select_pdf.setFocus()
-        self.gridLayout.addWidget(self.pushButton_select_pdf, 1, 2, 1, 1)
-        self.pushButton_save_pdf = QtWidgets.QPushButton(self.gridLayoutWidget)
-        self.pushButton_save_pdf.setMaximumSize(QtCore.QSize(120, 24))
-        self.pushButton_save_pdf.clicked.connect(self.save_pdf_file)
-        #
-        self.gridLayout.addWidget(
-            self.pushButton_save_pdf, 3, 1, 1, 1, alignment=Qt.AlignmentFlag.AlignHCenter
-        )
-        self.setCentralWidget(self.gridLayoutWidget) # Set the central widget
-        self.retranslateUi() # Set the text for UI elements
+        self.number_label = QtWidgets.QLabel()
+        layout.addWidget(self.number_label, 2, 0, 1, 1)
+        self.number_line_edit = QtWidgets.QLineEdit()
+        self.number_line_edit.setFixedWidth(100)
+        self.number_line_edit.setValidator(QtGui.QIntValidator(0, 9999999))
+        self.number_line_edit.setClearButtonEnabled(True)
+        layout.addWidget(self.number_line_edit, 2, 1, 1, 1)
 
-    def retranslateUi(self) -> None:
-        """Set the text for various UI elements in the application."""
+        # Widget Button select PDF
+        self.select_pdf_button = QtWidgets.QPushButton()
+        self.select_pdf_button.clicked.connect(self.select_pdf_file)
+        layout.addWidget(self.select_pdf_button, 1, 2, 1, 1)
+
+        # Widget Button save PDF
+        self.save_pdf_button = QtWidgets.QPushButton()
+        self.save_pdf_button.setMaximumSize(QtCore.QSize(120, 24))
+        self.save_pdf_button.clicked.connect(self.save_new_pdf)
+        layout.addWidget(self.save_pdf_button, 3, 1, 1, 1, QtCore.Qt.AlignmentFlag.AlignHCenter)
+
+        self.select_pdf_button.setFocus()
+        self.setCentralWidget(central_widget)
+
+    def retranslate_ui(self) -> None:
+        """Set the text for UI elements."""
         self.setWindowTitle("Suivi de colis")
-        self.label_date.setText("Date d'envoi :")
-        self.pushButton_select_pdf.setText("Choisir PDF")
-        self.label_pdf_file.setText("Fichier PDF :")
-        self.label_number.setText("Numéro :")
-        self.pushButton_save_pdf.setText("Enregistrer PDF")
-
-
-class ModifyPdf(MainWindow):
-    def __init__(self) -> None:
-        """Initialize the object."""
-        super().__init__()
+        self.date_label.setText("Date d'envoi:")
+        self.date_edit.setToolTip("Sélectionnez la date d'envoi")
+        self.pdf_file_label.setText("Fichier PDF:")
+        self.number_label.setText("Numéro:")
+        self.select_pdf_button.setText("Choisir PDF")
+        self.save_pdf_button.setText("Enregistrer PDF")
 
     def select_pdf_file(self) -> None:
-        """Open a file dialog to select a PDF file and set the selected file path in the QLineEdit."""
-        current_file, _ = QtWidgets.QFileDialog.getOpenFileName(
-            parent=self,
-            caption="Selectionnez le fichier PDF",
-            directory=str(Path.home()),
-            filter="Pdf (*.pdf *.PDF);;All files (*.*)",
-            options=QtWidgets.QFileDialog.DontUseNativeDialog
+        """Open a file dialog to select a PDF file."""
+        pdf_file, _ = QtWidgets.QFileDialog.getOpenFileName(
+            self, "Sélectionnez le fichier PDF", str(Path.home()), "Pdf (*.pdf *.PDF);;All files (*.*)"
         )
-        self.lineEdit_pdf_file.setText(current_file)
+        if pdf_file:
+            self.pdf_file_line_edit.setText(pdf_file)
 
-    def select_destination_file(self) -> str:
+    def select_destination_file(self) -> Optional[str]:
         """Open a file dialog to select a destination path for saving a PDF file."""
-        new_file, _ = QtWidgets.QFileDialog.getSaveFileName(
-            parent=self,
-            caption="Enregistrer le fichier PDF",
-            directory=f"{str(Path.home())}/Nouveau_fichier.pdf",
+        destination_file, _ = QtWidgets.QFileDialog.getSaveFileName(
+            self, "Enregistrer le fichier PDF", f"{str(Path.home())}/Nouveau_fichier.pdf"
         )
-        return new_file
+        return destination_file
 
     def validate_fields(self) -> bool:
-            """Check if the PDF file path and number fields are not empty. """
-            return bool(self.lineEdit_pdf_file.text() and self.lineEdit_number.text())
+        """Check if the PDF file path and number fields are not empty."""
+        return bool(self.pdf_file_line_edit.text() and self.number_line_edit.text())
 
-    def generate_data_dict(self) -> dict[str, str]:
+    def generate_data_dict(self) -> Dict[str, str]:
         """Generate a dictionary containing data from the UI elements."""
         return {
             "dactuelle": self.today.toString("MMMM yyyy"),
-            "ddepot": self.dateEdit.text(),
-            "num": self.lineEdit_number.text(),
+            "ddepot": self.date_edit.text(),
+            "num": self.number_line_edit.text(),
         }
 
-    def save_pdf_file(self) -> None:
-        """Save a modified PDF file with user-provided data if fields are valid, show warnings otherwise."""
-        if not self.validate_fields():
-            QtWidgets.QMessageBox.warning(
-                self, "Problème !!", "Veuillez saisir tous les champs !!"
-            )
-            return
-        data_dict = self.generate_data_dict()
-        if new_file := self.select_destination_file():
-            self.save_modified_pdf_file(self.lineEdit_pdf_file.text(), new_file, data_dict)
-            QtWidgets.QMessageBox.information(
-                self, "Sauvegarde", f"Fichier {new_file} enregistré."
-            )
+    def create_new_pdf(self, pdf_file: str, data_dict: Dict[str, str]) -> PdfWriter:
+        """Create a new PDF file with updated form field values."""
+        with open(pdf_file, "rb") as file:
+            pdf_reader = PdfReader(file)
+            pdf_writer = PdfWriter()
+            pdf_writer.append(pdf_reader)
+            pdf_writer.update_page_form_field_values(pdf_writer.pages[0], data_dict, flags=1)
+            return pdf_writer
 
-    def save_modified_pdf_file(self, pdf_file, new_file, data_dict) -> None:
+    @QtCore.pyqtSlot()
+    def save_new_pdf(self) -> None:
         """Save a modified PDF file with updated form field values."""
-        reader = PdfReader(pdf_file)
-        writer = PdfWriter()
-        writer.append(reader)
-        writer.update_page_form_field_values(
-            writer.pages[0], data_dict, flags=1
-        )
-        writer.write(new_file)
+        if not self.validate_fields():
+            QtWidgets.QMessageBox.warning(self, "Problème !!", "Veuillez saisir tous les champs !!")
+            return
 
+        data_dict = self.generate_data_dict()
+        pdf_file = self.pdf_file_line_edit.text()
+
+        if destination_file := self.select_destination_file():
+            with open(destination_file, "wb") as file:
+                pdf_writer = self.create_new_pdf(pdf_file, data_dict)
+                pdf_writer.write(file)
+            QtWidgets.QMessageBox.information(self, "Sauvegarde", f"Fichier {destination_file} enregistré.")
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     # Translate
     translator = QtCore.QTranslator()
-    traduction = QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.TranslationsPath)
-    translator.load("qtbase_fr.qm", traduction)
+    translation_path = QtCore.QLibraryInfo.location(QtCore.QLibraryInfo.TranslationsPath)
+    translator.load("qtbase_fr.qm", translation_path)
     app.installTranslator(translator)
-    modify_pdf = ModifyPdf()
-    modify_pdf.show()
-    sys.exit(app.exec())
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec_())
