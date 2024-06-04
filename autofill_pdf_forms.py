@@ -24,7 +24,7 @@ class MainWindow(QtWidgets.QMainWindow):
         layout = QtWidgets.QGridLayout(central_widget)
 
         # Widgets Date
-        self.date_label = QtWidgets.QLabel()
+        self.date_label = QtWidgets.QLabel(self)
         layout.addWidget(self.date_label, 0, 0, 1, 1)
         self.date_edit = QtWidgets.QDateEdit(calendarPopup=True)
         self.date_edit.setDisplayFormat("dddd dd MMMM yyyy")
@@ -33,28 +33,28 @@ class MainWindow(QtWidgets.QMainWindow):
         layout.addWidget(self.date_edit, 0, 1, 1, 1)
 
         # Widgets PDF file
-        self.pdf_file_label = QtWidgets.QLabel()
+        self.pdf_file_label = QtWidgets.QLabel(self)
         layout.addWidget(self.pdf_file_label, 1, 0, 1, 1)
-        self.pdf_file_line_edit = QtWidgets.QLineEdit()
+        self.pdf_file_line_edit = QtWidgets.QLineEdit(self)
         self.pdf_file_line_edit.setClearButtonEnabled(True)
         layout.addWidget(self.pdf_file_line_edit, 1, 1, 1, 1)
 
         # Widgets Number
-        self.number_label = QtWidgets.QLabel()
+        self.number_label = QtWidgets.QLabel(self)
         layout.addWidget(self.number_label, 2, 0, 1, 1)
-        self.number_line_edit = QtWidgets.QLineEdit()
+        self.number_line_edit = QtWidgets.QLineEdit(self)
         self.number_line_edit.setFixedWidth(100)
         self.number_line_edit.setValidator(QtGui.QIntValidator(0, 9999999))
         self.number_line_edit.setClearButtonEnabled(True)
         layout.addWidget(self.number_line_edit, 2, 1, 1, 1)
 
         # Widget Button select PDF
-        self.select_pdf_button = QtWidgets.QPushButton()
+        self.select_pdf_button = QtWidgets.QPushButton(self)
         self.select_pdf_button.clicked.connect(self.select_pdf_file)
         layout.addWidget(self.select_pdf_button, 1, 2, 1, 1)
 
         # Widget Button save PDF
-        self.save_pdf_button = QtWidgets.QPushButton()
+        self.save_pdf_button = QtWidgets.QPushButton(self)
         self.save_pdf_button.setMaximumSize(QtCore.QSize(120, 24))
         self.save_pdf_button.clicked.connect(self.save_new_pdf)
         layout.addWidget(self.save_pdf_button, 3, 1, 1, 1, QtCore.Qt.AlignmentFlag.AlignHCenter)
@@ -75,7 +75,11 @@ class MainWindow(QtWidgets.QMainWindow):
     def select_pdf_file(self) -> None:
         """Open a file dialog to select a PDF file."""
         pdf_file, _ = QtWidgets.QFileDialog.getOpenFileName(
-            self, "Sélectionnez le fichier PDF", str(Path.home()), "Pdf (*.pdf *.PDF);;Tous (*.*)"
+            self,
+            "Sélectionnez le fichier PDF",
+            str(Path.home()),
+            "Pdf (*.pdf *.PDF);;Tous (*.*)",
+            options=QtWidgets.QFileDialog.DontUseNativeDialog,
         )
         if pdf_file:
             self.pdf_file_line_edit.setText(pdf_file)
@@ -83,7 +87,10 @@ class MainWindow(QtWidgets.QMainWindow):
     def select_destination_file(self) -> Optional[str]:
         """Open a file dialog to select a destination path for saving a PDF file."""
         destination_file, _ = QtWidgets.QFileDialog.getSaveFileName(
-            self, "Enregistrer le fichier PDF", f"{str(Path.home())}/Nouveau_fichier.pdf"
+            self,
+            "Enregistrer le fichier PDF",
+            f"{str(Path.home())}/Nouveau_fichier.pdf",
+            options=QtWidgets.QFileDialog.DontUseNativeDialog
         )
         return destination_file
 
