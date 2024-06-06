@@ -112,7 +112,7 @@ class MainWindow(QtWidgets.QMainWindow):
             pdf_reader = PdfReader(file)
             pdf_writer = PdfWriter()
             pdf_writer.append(pdf_reader)
-            pdf_writer.update_page_form_field_values(pdf_writer.pages[0], data_dict, flags=1)
+            pdf_writer.update_page_form_field_values(pdf_writer.pages[0], data_dict)
             return pdf_writer
 
     @QtCore.pyqtSlot()
