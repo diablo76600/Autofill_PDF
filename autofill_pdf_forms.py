@@ -3,12 +3,12 @@
 
 import sys
 from pathlib import Path
-from typing import Dict, Optional
 from PyQt5 import QtCore, QtWidgets, QtGui
 from pypdf import PdfReader, PdfWriter
 import locale
 # Set localization in French
 locale.setlocale(locale.LC_TIME, "fr_FR.UTF-8")
+
 
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self) -> None:
@@ -84,7 +84,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if pdf_file:
             self.pdf_file_line_edit.setText(pdf_file)
 
-    def select_destination_file(self) -> Optional[str]:
+    def select_destination_file(self) -> str:
         """Open a file dialog to select a destination path for saving a PDF file."""
         destination_file, _ = QtWidgets.QFileDialog.getSaveFileName(
             self,
@@ -98,7 +98,7 @@ class MainWindow(QtWidgets.QMainWindow):
         """Check if the PDF file path and number fields are not empty."""
         return bool(self.pdf_file_line_edit.text() and self.number_line_edit.text())
 
-    def generate_data_dict(self) -> Dict[str, str]:
+    def generate_data_dict(self) -> dict[str, str]:
         """Generate a dictionary containing data from the UI elements."""
         return {
             "dactuelle": self.today.toString("MMMM yyyy"),
@@ -106,7 +106,7 @@ class MainWindow(QtWidgets.QMainWindow):
             "num": self.number_line_edit.text(),
         }
 
-    def create_new_pdf(self, pdf_file: str, data_dict: Dict[str, str]) -> PdfWriter:
+    def create_new_pdf(self, pdf_file: str, data_dict: dict[str, str]) -> PdfWriter:
         """Create a new PDF file with updated form field values."""
         with open(pdf_file, "rb") as file:
             pdf_reader = PdfReader(file)
