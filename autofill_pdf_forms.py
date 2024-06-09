@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 from PyQt5 import QtCore, QtWidgets, QtGui
 from pypdf import PdfReader, PdfWriter
+from pypdf.errors import PyPdfError
 import locale
 # Set localization in French
 locale.setlocale(locale.LC_TIME, "fr_FR.UTF-8")
@@ -126,10 +127,13 @@ class MainWindow(QtWidgets.QMainWindow):
         pdf_file = self.pdf_file_line_edit.text()
 
         if destination_file := self.select_destination_file():
-            with open(destination_file, "wb") as file:
-                pdf_writer = self.create_new_pdf(pdf_file, data_dict)
-                pdf_writer.write(file)
-            QtWidgets.QMessageBox.information(self, "Sauvegarde", f"Fichier {destination_file} enregistré.")
+            try:
+                with open(destination_file, "wb") as file:
+                    pdf_writer = self.create_new_pdf(pdf_file, data_dict)
+                    pdf_writer.write(file)
+                    QtWidgets.QMessageBox.information(self, "Sauvegarde", f"Fichier {destination_file} enregistré.")
+            except PyPdfError as error:
+                QtWidgets.QMessageBox.warning(self, "Sauvegarde", f"Problème lors de l'enregistrement du fichier {error}.")
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
