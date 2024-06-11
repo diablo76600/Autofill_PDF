@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 from PyQt5 import QtCore, QtWidgets, QtGui
 from pypdf import PdfReader, PdfWriter
-from pypdf.errors import PyPdfError
+from pypdf.errors import PyPdfError, EmptyFileError
 import locale
 # Set localization in French
 locale.setlocale(locale.LC_TIME, "fr_FR.UTF-8")
@@ -122,22 +122,28 @@ class MainWindow(QtWidgets.QMainWindow):
 
         data_dict = self.generate_data_dict()
         pdf_file = self.pdf_file_line_edit.text()
+    
+        if not self.controle_form_name(pdf_file, data_dict):
+            QtWidgets.QMessageBox.warning(self, "Sauvegarde", "Fichier non valide !")
+            return
 
-        if self.controle_form_name(pdf_file, data_dict):
-            if destination_file := self.select_destination_file():
-                with open(destination_file, "wb") as dest_file, open(pdf_file, "rb") as file:
-                    pdf_reader = PdfReader(file)
-                    pdf_writer = PdfWriter()
-                    pdf_writer.append(pdf_reader)
-                    pdf_writer.update_page_form_field_values(pdf_writer.pages[0], data_dict)
-                    pdf_writer.write(dest_file)
-                    QtWidgets.QMessageBox.information(
-                        self, "Sauvegarde", f"Fichier {destination_file} enregistré."
-                    )
-        else:
-            QtWidgets.QMessageBox.warning(
-                self, "Sauvegarde", "Problème lors de l'enregistrement du fichier."
-            )
+        destination_file = self.select_destination_file()
+        if not destination_file:
+            return
+
+        try:
+            self._save_pdf_to_destination(pdf_file, destination_file, data_dict)
+            QtWidgets.QMessageBox.information(self, "Sauvegarde", f"Fichier {destination_file} enregistré.")
+        except (EmptyFileError, PyPdfError) as error:
+            QtWidgets.QMessageBox.warning(self, "Sauvegarde", f"Problème lors de l'enregistrement du fichier.\n{error}")
+
+    def _save_pdf_to_destination(self, pdf_file: str, destination_file: str, data_dict: dict) -> None:
+        with open(destination_file, "wb") as dest_file, open(pdf_file, "rb") as file:
+            pdf_reader = PdfReader(file)
+            pdf_writer = PdfWriter()
+            pdf_writer.append(pdf_reader)
+            pdf_writer.update_page_form_field_values(pdf_writer.pages[0], data_dict)
+            pdf_writer.write(dest_file)
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
